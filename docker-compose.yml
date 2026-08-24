@@ -1,0 +1,32 @@
+services:
+  web:
+    build: .
+    ports:
+      - '8000:80'
+    env_file: .env
+    environment:
+      OKATANA_AUTO_MIGRATE: 'true'
+      DB_CONNECTION: '${DB_CONNECTION:-sqlite}'
+      DB_DATABASE: '${DB_DATABASE:-/data/database.sqlite}'
+    volumes:
+      - okatana_storage:/var/www/html/storage
+      - okatana_data:/data
+    restart: unless-stopped
+
+  queue:
+    build: .
+    env_file: .env
+    command: ['php', 'artisan', 'queue:work', '--sleep=2', '--tries=5', '--timeout=90']
+    environment:
+      DB_CONNECTION: '${DB_CONNECTION:-sqlite}'
+      DB_DATABASE: '${DB_DATABASE:-/data/database.sqlite}'
+    volumes:
+      - okatana_storage:/var/www/html/storage
+      - okatana_data:/data
+    restart: unless-stopped
+    depends_on:
+      - web
+
+volumes:
+  okatana_storage:
+  okatana_data:
