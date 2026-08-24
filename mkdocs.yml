@@ -1,0 +1,118 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+site_name: Okatana Documentation
+site_description: Complete user, administrator, operator, integration, and developer documentation for Okatana.
+docs_dir: docs
+site_dir: public/docs
+use_directory_urls: true
+strict: true
+exclude_docs: |
+  openapi.yaml
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  language: en
+  font: false
+  logo: assets/logo-256.png
+  palette:
+    scheme: default
+    primary: white
+    accent: red
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.footer
+    - navigation.path
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+
+plugins:
+  - search:
+      lang: en
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra_css:
+  - assets/stylesheets/okatana.css
+
+extra_javascript:
+  - assets/javascripts/okatana.js
+
+extra:
+  generator: false
+
+copyright: Okatana documentation · MIT licensed software
+
+nav:
+  - Home: index.md
+  - Start here:
+      - Product tour: getting-started/product-tour.md
+      - Five-minute quickstart: getting-started/quickstart.md
+      - Core concepts: getting-started/concepts.md
+  - User guide:
+      - Account and sign-in: user-guide/account-and-access.md
+      - Organizations: user-guide/organizations.md
+      - Projects and access: user-guide/projects-and-access.md
+      - Boards and tickets: user-guide/boards-and-tickets.md
+      - Rich text and files: user-guide/rich-text-and-files.md
+      - Filters, analytics, and Gantt: user-guide/filters-analytics-gantt.md
+      - Documents knowledge base: user-guide/documents.md
+      - Notifications and activity: user-guide/notifications.md
+  - Administration:
+      - Roles and permissions: administration/roles-and-permissions.md
+      - Invitations and membership: administration/invitations.md
+      - Audit history: administration/audit-history.md
+      - Import and export: administration/import-export.md
+      - Integrations: administration/integrations.md
+  - Operations:
+      - Install locally: operations/installation.md
+      - Deploy with Docker: operations/docker.md
+      - Configuration: operations/configuration.md
+      - Databases: operations/databases.md
+      - Mail and queues: operations/mail-and-queues.md
+      - OAuth and SSO: operations/oauth-sso.md
+      - Production checklist: operations/production.md
+      - Backup and restore: operations/backup-restore.md
+      - Troubleshooting: operations/troubleshooting.md
+  - Integrations:
+      - HTTP API guide: integrations/http-api.md
+      - Endpoint reference: API.md
+      - Webhooks: integrations/webhooks.md
+  - Developers:
+      - Architecture: ARCHITECTURE.md
+      - Laravel backend: developer/backend.md
+      - React frontend: developer/frontend.md
+      - Data model: developer/data-model.md
+      - Security model: developer/security.md
+      - Testing and quality: developer/testing.md
+      - UI design system: UI-DESIGN.md
+  - Reference:
+      - Environment variables: reference/environment.md
+      - Permissions matrix: reference/permissions.md
+      - Events and scopes: reference/events-and-scopes.md
+      - Route map: reference/routes.md
+      - Glossary: reference/glossary.md
