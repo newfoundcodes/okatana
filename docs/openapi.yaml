@@ -1,0 +1,647 @@
+openapi: 3.1.0
+info:
+  title: Okatana External API
+  version: 1.0.0
+  description: Organization-scoped external HTTP API for Okatana integrations.
+servers:
+  - url: /api/v1
+security:
+  - OkatanaBearer: []
+components:
+  securitySchemes:
+    OkatanaBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: oka_public.secret
+  schemas:
+    Error:
+      type: object
+      properties:
+        message: { type: string }
+    Project:
+      type: object
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        name: { type: string }
+        key: { type: string }
+        description: { type: [string, 'null'] }
+        archived_at: { type: [string, 'null'], format: date-time }
+    Board:
+      type: object
+      properties:
+        id: { type: string }
+        project_id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        position: { type: integer }
+        color: { type: [string, 'null'] }
+        wip_limit: { type: [integer, 'null'] }
+        is_done: { type: boolean }
+        is_hidden: { type: boolean }
+    Ticket:
+      type: object
+      properties:
+        id: { type: string }
+        project_id: { type: string }
+        board_id: { type: string }
+        number: { type: integer }
+        title: { type: string }
+        description_html: { type: [string, 'null'] }
+        priority:
+          type: string
+          enum: [lowest, low, normal, high, highest, critical]
+        position: { type: integer }
+        due_at: { type: [string, 'null'], format: date-time }
+        started_at: { type: [string, 'null'], format: date-time }
+        completed_at: { type: [string, 'null'], format: date-time }
+        archived_at: { type: [string, 'null'], format: date-time }
+    Document:
+      type: object
+      properties:
+        id: { type: string }
+        organization_id: { type: string }
+        project_id: { type: [string, 'null'] }
+        author_id: { type: [string, 'null'] }
+        title: { type: string }
+        caption: { type: [string, 'null'] }
+        content_html: { type: [string, 'null'] }
+        status: { type: string, enum: [draft, published] }
+        published_at: { type: [string, 'null'], format: date-time }
+        archived_at: { type: [string, 'null'], format: date-time }
+        tags:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              name: { type: string, maxLength: 50 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+paths:
+  /organizations/{organization}:
+    get:
+      summary: Read organization
+      description: Requires organization:read.
+      parameters:
+        - in: path
+          name: organization
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Organization }
+        '401':
+          {
+            description: Invalid credential,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } },
+          }
+        '403': { description: Wrong organization or scope }
+  /organizations/{organization}/projects:
+    get:
+      summary: List projects
+      description: Requires projects:read.
+      parameters:
+        - in: path
+          name: organization
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Project list }
+    post:
+      summary: Create project
+      description: Requires projects:write.
+      parameters:
+        - in: path
+          name: organization
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, key]
+              properties:
+                name: { type: string, maxLength: 180 }
+                key: { type: string, maxLength: 12 }
+                description: { type: [string, 'null'], maxLength: 5000 }
+      responses:
+        '201': { description: Project created }
+        '422': { description: Validation failure }
+  /projects/{project}:
+    get:
+      summary: Read project
+      description: Requires projects:read.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Project' }
+    patch:
+      summary: Update project
+      description: Requires projects:write.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 180 }
+                description: { type: [string, 'null'], maxLength: 5000 }
+                archived: { type: boolean }
+      responses:
+        '200': { description: Updated project }
+        '422': { description: Validation failure }
+    delete:
+      summary: Soft-delete project
+      description: Requires projects:write.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted }
+  /projects/{project}/members:
+    get:
+      summary: List project members
+      description: Requires projects:read. Includes explicit project members and organization owners/admins.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Member list }
+  /projects/{project}/labels:
+    get:
+      summary: List project labels
+      description: Requires projects:read.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Label list }
+  /projects/{project}/boards:
+    get:
+      summary: List project boards
+      description: Requires boards:read.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Board list }
+    post:
+      summary: Create project board
+      description: Requires boards:write.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 120 }
+                color: { type: [string, 'null'], maxLength: 32 }
+                wip_limit: { type: [integer, 'null'], minimum: 1 }
+                is_done: { type: boolean }
+      responses:
+        '201': { description: Board created }
+        '422': { description: Validation failure }
+  /projects/{project}/boards/reorder:
+    put:
+      summary: Reorder project boards
+      description: Requires boards:write.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [board_ids]
+              properties:
+                board_ids: { type: array, items: { type: string } }
+      responses:
+        '200': { description: Reordered board list }
+        '422': { description: Invalid board list }
+  /boards/{board}:
+    patch:
+      summary: Update board
+      description: Requires boards:write.
+      parameters:
+        - in: path
+          name: board
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 120 }
+                color: { type: [string, 'null'], maxLength: 32 }
+                wip_limit: { type: [integer, 'null'], minimum: 1 }
+                is_done: { type: boolean }
+                is_hidden: { type: boolean }
+      responses:
+        '200': { description: Updated board }
+    delete:
+      summary: Soft-delete board
+      description: Requires boards:write. If tickets exist, move_to_board_id is required.
+      parameters:
+        - in: path
+          name: board
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                move_to_board_id: { type: string }
+      responses:
+        '204': { description: Deleted }
+        '422': { description: Invalid target or WIP limit exceeded }
+  /projects/{project}/tickets:
+    get:
+      summary: List project tickets
+      description: Requires tickets:read.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+        - in: query
+          name: board_id
+          schema: { type: string }
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        '200': { description: Paginated ticket list }
+    post:
+      summary: Create ticket
+      description: Requires tickets:write. Choose board_id or board_slug.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                board_id: { type: string }
+                board_slug: { type: string }
+                title: { type: string, maxLength: 500 }
+                description_html: { type: [string, 'null'], maxLength: 200000 }
+                priority:
+                  type: string
+                  enum: [lowest, low, normal, high, highest, critical]
+                due_at: { type: [string, 'null'], format: date-time }
+                assignee_ids: { type: array, items: { type: string } }
+                label_ids: { type: array, items: { type: string } }
+      responses:
+        '201': { description: Ticket created }
+        '422': { description: Validation, relation, or WIP-limit failure }
+  /projects/{project}/tickets/reorder:
+    put:
+      summary: Reorder tickets inside a board
+      description: Requires tickets:write.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [board_id, ticket_ids]
+              properties:
+                board_id: { type: string }
+                ticket_ids: { type: array, items: { type: string } }
+      responses:
+        '204': { description: Reordered }
+        '422': { description: Invalid ticket list }
+  /projects/{project}/analytics:
+    get:
+      summary: Read project analytics
+      description: Requires analytics:read.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Project analytics }
+  /tickets/{ticket}:
+    get:
+      summary: Read ticket
+      description: Requires tickets:read.
+      parameters:
+        - in: path
+          name: ticket
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Ticket detail }
+    patch:
+      summary: Update ticket
+      description: Requires tickets:write.
+      parameters:
+        - in: path
+          name: ticket
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string, maxLength: 500 }
+                description_html: { type: [string, 'null'], maxLength: 200000 }
+                priority: { type: string, enum: [lowest, low, normal, high, highest, critical] }
+                due_at: { type: [string, 'null'], format: date-time }
+                assignee_ids: { type: array, items: { type: string } }
+                label_ids: { type: array, items: { type: string } }
+                archived: { type: boolean }
+      responses:
+        '200': { description: Updated ticket }
+    delete:
+      summary: Soft-delete ticket
+      description: Requires tickets:write.
+      parameters:
+        - in: path
+          name: ticket
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted }
+  /tickets/{ticket}/move:
+    post:
+      summary: Move a ticket to another board
+      description: Requires tickets:write.
+      parameters:
+        - in: path
+          name: ticket
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [board_id]
+              properties:
+                board_id: { type: string }
+                position: { type: integer, minimum: 0 }
+      responses:
+        '200': { description: Moved ticket }
+        '422': { description: Invalid board or WIP limit reached }
+  /tickets/{ticket}/comments:
+    post:
+      summary: Create ticket comment
+      description: Requires comments:write.
+      parameters:
+        - in: path
+          name: ticket
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body_html]
+              properties:
+                body_html: { type: string, maxLength: 200000 }
+      responses:
+        '201': { description: Comment created }
+  /organizations/{organization}/documents:
+    get:
+      tags: [Documents]
+      summary: List organization documents
+      description: Requires documents:read. Supports optional project, status, search, tag, and pagination filters.
+      parameters:
+        - in: path
+          name: organization
+          required: true
+          schema: { type: string }
+        - in: query
+          name: project_id
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string, enum: [draft, published] }
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: tags
+          description: Comma-separated tag names. Multiple names use match-all filtering.
+          schema: { type: string }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        '200': { description: Paginated document list }
+    post:
+      tags: [Documents]
+      summary: Create document
+      description: Requires documents:write. The API credential is used as the author when it has a creator user.
+      parameters:
+        - in: path
+          name: organization
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                project_id: { type: [string, 'null'] }
+                title: { type: string, maxLength: 500 }
+                caption: { type: [string, 'null'], maxLength: 2000 }
+                content_html: { type: [string, 'null'], maxLength: 1000000 }
+                status: { type: string, enum: [draft, published], default: draft }
+                editor_ids: { type: array, maxItems: 100, items: { type: string } }
+                tag_names: { type: array, maxItems: 20, items: { type: string, maxLength: 50 } }
+      responses:
+        '201':
+          description: Document created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Document' }
+        '422': { description: Validation failure }
+  /documents/{document}:
+    get:
+      tags: [Documents]
+      summary: Read document
+      description: Requires documents:read.
+      parameters:
+        - in: path
+          name: document
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Document detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Document' }
+    patch:
+      tags: [Documents]
+      summary: Update document
+      description: Requires documents:write. Can update publication state, archive state, project scope, content, and editor membership.
+      parameters:
+        - in: path
+          name: document
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id: { type: [string, 'null'] }
+                title: { type: string, maxLength: 500 }
+                caption: { type: [string, 'null'], maxLength: 2000 }
+                content_html: { type: [string, 'null'], maxLength: 1000000 }
+                status: { type: string, enum: [draft, published] }
+                archived: { type: boolean }
+                editor_ids: { type: array, maxItems: 100, items: { type: string } }
+                tag_names: { type: array, maxItems: 20, items: { type: string, maxLength: 50 } }
+      responses:
+        '200': { description: Document updated }
+        '422': { description: Validation failure }
+    delete:
+      tags: [Documents]
+      summary: Soft-delete document
+      description: Requires documents:write.
+      parameters:
+        - in: path
+          name: document
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Document soft-deleted }
+  /documents/{document}/comments:
+    post:
+      tags: [Documents]
+      summary: Create document comment
+      description: Requires document_comments:write.
+      parameters:
+        - in: path
+          name: document
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body_html]
+              properties:
+                body_html: { type: string, maxLength: 200000 }
+      responses:
+        '201': { description: Comment created }
+        '422': { description: Validation failure }
+
+  /organizations/{organization}/notifications:
+    post:
+      tags: [Notifications]
+      summary: Send organization notifications
+      description: Requires notifications:write. Recipients must belong to the credential organization.
+      parameters:
+        - in: path
+          name: organization
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_ids, title, body]
+              properties:
+                user_ids: { type: array, minItems: 1, maxItems: 100, items: { type: string } }
+                title: { type: string, maxLength: 180 }
+                body: { type: string, maxLength: 2000 }
+                url: { type: [string, 'null'], description: Internal /app path only }
+      responses:
+        '201': { description: Notifications queued/sent }
+        '422': { description: Invalid recipient or URL }
+  /projects/{project}/tags:
+    get:
+      tags: [Projects]
+      summary: List used project tags
+      description: Requires projects:read. Returns tags currently assigned to at least one ticket.
+      parameters:
+        - in: path
+          name: project
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Used project tags with ticket counts }
