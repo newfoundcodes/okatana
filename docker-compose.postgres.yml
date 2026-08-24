@@ -1,0 +1,39 @@
+services:
+  web:
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_DATABASE: okatana
+      DB_USERNAME: okatana
+      DB_PASSWORD: ${OKATANA_DB_PASSWORD:-change-me}
+    depends_on:
+      database:
+        condition: service_healthy
+  queue:
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_DATABASE: okatana
+      DB_USERNAME: okatana
+      DB_PASSWORD: ${OKATANA_DB_PASSWORD:-change-me}
+    depends_on:
+      database:
+        condition: service_healthy
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: okatana
+      POSTGRES_USER: okatana
+      POSTGRES_PASSWORD: ${OKATANA_DB_PASSWORD:-change-me}
+    volumes:
+      - okatana_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U okatana -d okatana']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+volumes:
+  okatana_postgres:
