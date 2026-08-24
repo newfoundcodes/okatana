@@ -1,0 +1,100 @@
+<?php
+
+/*
+ * Okatana - A Newfoundcodes project.
+ *
+ * Copyright (C) 2026 Jonathan Eldy Baldivicio
+ *
+ * Author: Jonathan Eldy Baldivicio
+ * Contact: jonathaneldy.baldivicio@newfoundcodes.com
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Project extends Model
+{
+  use HasUlids;
+  use SoftDeletes;
+
+  protected $fillable = [
+    'organization_id',
+    'name',
+    'key',
+    'description',
+    'settings',
+    'archived_at',
+  ];
+
+  protected function casts(): array
+  {
+    return [
+      'settings' => 'array',
+      'archived_at' => 'datetime',
+    ];
+  }
+
+  public function organization(): BelongsTo
+  {
+    return $this->belongsTo(Organization::class);
+  }
+
+  public function members(): BelongsToMany
+  {
+    return $this->belongsToMany(User::class, 'project_members')->withTimestamps();
+  }
+
+  public function boards(): HasMany
+  {
+    return $this->hasMany(Board::class)->orderBy('position');
+  }
+
+  public function tickets(): HasMany
+  {
+    return $this->hasMany(Ticket::class);
+  }
+
+  public function labels(): HasMany
+  {
+    return $this->hasMany(Label::class);
+  }
+
+  public function tags(): HasMany
+  {
+    return $this->hasMany(Tag::class);
+  }
+
+  public function documents(): HasMany
+  {
+    return $this->hasMany(Document::class);
+  }
+
+  public function hasAccess(User $user): bool
+  {
+    return ($this->organization?->canAdmin($user) ?? false) ||
+      $this->members()->whereKey($user->id)->exists();
+  }
+}
