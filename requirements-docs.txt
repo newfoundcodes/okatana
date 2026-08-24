@@ -1,0 +1,2 @@
+# Exact version validated by the repository's strict documentation build.
+mkdocs-material==9.7.7
