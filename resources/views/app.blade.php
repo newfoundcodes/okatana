@@ -1,0 +1,59 @@
+{{--
+  Okatana - A Newfoundcodes project.
+
+  Copyright (C) 2026 Jonathan Eldy Baldivicio
+
+  Author: Jonathan Eldy Baldivicio
+  Contact: jonathaneldy.baldivicio@newfoundcodes.com
+
+  SPDX-License-Identifier: AGPL-3.0-or-later
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published
+  by the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program. If not, see <https://www.gnu.org/licenses/>.
+ --}}
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <meta name="theme-color" content="#FFFFFF">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+
+  <title>Okatana</title>
+
+  <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png" />
+  <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png" />
+  <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png" />
+  <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png" />
+  <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png" />
+  <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png" />
+  <link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/manifest.json" />
+
+  @viteReactRefresh
+  @vite(['resources/css/app.css','resources/js/app.tsx'])
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
