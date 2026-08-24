@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: ['main', 'master']
+  pull_request:
+    branches: ['main', 'master']
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, gd, json, openssl, pdo, xmlwriter, sqlite3
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install PHP Dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare Laravel Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch database/database.sqlite
+          php artisan migrate --force
+
+      - name: Install Node Dependencies
+        run: npm install
+
+      - name: Run UI Audit
+        run: npm run ui:audit
+
+      - name: Run Tests
+        run: composer test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Build Docker Image
+        run: docker build -t okatana-app:latest .
+
+      - name: Save Docker Image to Tarball
+        run: docker save okatana-app:latest > okatana-app.tar
+
+      - name: Upload Docker Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: okatana-app
+          path: okatana-app.tar
+          retention-days: 90
