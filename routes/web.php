@@ -145,6 +145,7 @@ Route::prefix('app-api')->group(function (): void {
       ]);
 
       Route::delete('/invitations/{invitation}', [InvitationController::class, 'revoke']);
+      Route::post('/invitations/{invitation}/respond', [InvitationController::class, 'respond']);
       Route::get('/documents', [DocumentController::class, 'index']);
       Route::post('/documents', [DocumentController::class, 'store']);
       Route::get('/documents/editor-options', [DocumentController::class, 'editorOptions']);
