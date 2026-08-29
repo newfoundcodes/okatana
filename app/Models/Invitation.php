@@ -46,6 +46,7 @@ class Invitation extends Model
     'expires_at',
     'accepted_at',
     'revoked_at',
+    'declined_at',
   ];
 
   protected function casts(): array
@@ -54,6 +55,7 @@ class Invitation extends Model
       'expires_at' => 'datetime',
       'accepted_at' => 'datetime',
       'revoked_at' => 'datetime',
+      'declined_at' => 'datetime',
     ];
   }
 
@@ -74,6 +76,9 @@ class Invitation extends Model
 
   public function active(): bool
   {
-    return !$this->accepted_at && !$this->revoked_at && $this->expires_at?->isFuture();
+    return !$this->accepted_at &&
+      !$this->revoked_at &&
+      !$this->declined_at &&
+      $this->expires_at?->isFuture();
   }
 }
