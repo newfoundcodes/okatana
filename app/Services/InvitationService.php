@@ -32,6 +32,7 @@ use App\Models\Invitation;
 use App\Models\Organization;
 use App\Models\Project;
 use App\Models\User;
+use App\Notifications\InAppWorkspaceNotification;
 use App\Notifications\InvitationNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -65,13 +66,44 @@ class InvitationService
       'expires_at' => now()->addHours((int) config('okatana.invitation_ttl_hours', 168)),
     ]);
 
-    Notification::route('mail', $email)->notify(new InvitationNotification($invite, $plain));
+    $invite->load(['organization', 'project', 'inviter']);
+    $existingUser = User::where('email', $email)->first();
+
+    if ($existingUser) {
+      Notification::route('mail', $email)->notify(
+        new InvitationNotification($invite, $plain, accountExists: true),
+      );
+
+      $scope = $project ? 'project ' . $project->name : 'organization ' . $org->name;
+      $existingUser->notifyNow(new InAppWorkspaceNotification([
+        'kind' => 'invitation.received',
+        'title' => 'Invitation to join ' . $scope,
+        'body' => $inviter->name . ' invited you to join ' . $scope . ' as ' . $role . '.',
+        'url' => null,
+        'invitation_id' => $invite->id,
+        'invitation_organization' => $org->name,
+        'invitation_project' => $project?->name,
+        'invitation_role' => $role,
+        'invitation_inviter' => $inviter->name,
+        'invitation_expires_at' => $invite->expires_at->toIso8601String(),
+        'actor' => [
+          'id' => $inviter->id,
+          'name' => $inviter->name,
+          'avatar_url' => $inviter->avatar_url,
+        ],
+      ]));
+    } else {
+      Notification::route('mail', $email)->notify(
+        new InvitationNotification($invite, $plain, accountExists: false),
+      );
+    }
+
     return $invite;
   }
 
   public function findByPlainToken(string $token): Invitation
   {
-    return Invitation::with(['organization', 'project'])
+    return Invitation::with(['organization', 'project', 'inviter'])
       ->where('token_hash', hash('sha256', $token))
       ->firstOrFail();
   }
