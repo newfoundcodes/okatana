@@ -32,6 +32,8 @@ use App\Models\Invitation;
 use App\Models\OrganizationMember;
 use App\Models\ProjectMember;
 use App\Models\User;
+use App\Notifications\InvitationAcceptedNotification;
+use App\Notifications\InvitationDeclinedNotification;
 use App\Services\AccountSecurityService;
 use App\Services\ActivityRecorder;
 use App\Services\AuthorizationService;
@@ -179,6 +181,11 @@ class InvitationController extends Controller
       $request,
     );
 
+    $inviter = $invite->inviter;
+    if ($inviter) {
+      $inviter->notify(new InvitationAcceptedNotification($invite, $fresh));
+    }
+
     if ($security->twoFactorRequired() && $fresh->two_factor_confirmed_at) {
       Auth::logout();
 
@@ -209,6 +216,96 @@ class InvitationController extends Controller
       'organization_id' => $invite->organization_id,
       'project_id' => $invite->project_id,
     ];
+  }
+
+  public function respond(
+    Request $request,
+    Invitation $invitation,
+    ActivityRecorder $activity,
+  ) {
+    $invitation->load(['organization', 'project', 'inviter']);
+
+    abort_unless(
+      strtolower($request->user()->email) === strtolower($invitation->email),
+      403,
+      'This invitation is not addressed to your account.',
+    );
+    abort_unless($invitation->active(), 410, 'Invitation is expired, accepted, declined, or revoked.');
+
+    $data = $request->validate([
+      'action' => 'required|in:accept,decline',
+    ]);
+
+    $user = $request->user();
+
+    if ($data['action'] === 'accept') {
+      DB::transaction(function () use ($invitation, $user) {
+        $membership = OrganizationMember::where('organization_id', $invitation->organization_id)
+          ->where('user_id', $user->id)
+          ->first();
+
+        if (!$membership) {
+          OrganizationMember::create([
+            'organization_id' => $invitation->organization_id,
+            'user_id' => $user->id,
+            'role' => $invitation->role,
+          ]);
+        } else {
+          $rank = ['user' => 1, 'admin' => 2, 'owner' => 3];
+          if (($rank[$invitation->role] ?? 0) > ($rank[$membership->role] ?? 0)) {
+            $membership->update(['role' => $invitation->role]);
+          }
+        }
+
+        if ($invitation->project_id) {
+          ProjectMember::firstOrCreate([
+            'project_id' => $invitation->project_id,
+            'user_id' => $user->id,
+          ]);
+        }
+
+        $invitation->update(['accepted_at' => now()]);
+      });
+
+      $activity->record(
+        'invitation.accepted',
+        $invitation->organization,
+        $invitation->project,
+        $invitation,
+        [],
+        ['email' => $invitation->email],
+        $user,
+        $request,
+      );
+
+      if ($invitation->inviter) {
+        $invitation->inviter->notify(new InvitationAcceptedNotification($invitation, $user));
+      }
+
+      return [
+        'status' => 'accepted',
+        'organization_id' => $invitation->organization_id,
+        'project_id' => $invitation->project_id,
+      ];
+    }
+
+    $invitation->update(['declined_at' => now()]);
+    $activity->record(
+      'invitation.declined',
+      $invitation->organization,
+      $invitation->project,
+      $invitation,
+      [],
+      ['email' => $invitation->email],
+      $user,
+      $request,
+    );
+
+    if ($invitation->inviter) {
+      $invitation->inviter->notify(new InvitationDeclinedNotification($invitation, $user));
+    }
+
+    return ['status' => 'declined'];
   }
 
   public function revoke(
