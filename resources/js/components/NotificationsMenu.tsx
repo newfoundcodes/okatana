@@ -25,9 +25,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { get, navigate, post } from '../lib/api';
+import { toast } from '../lib/toast';
 import { Avatar, Field, InlineAction, TextInput } from './Primitives';
 import PaginationBar from './Pagination/PaginationBar';
 import BellIcon from './BellIcon';
+import InvitationRespondModal from './InvitationRespondModal';
 
 export default function NotificationsMenu() {
   const [open, setOpen] = useState(false);
@@ -43,6 +45,7 @@ export default function NotificationsMenu() {
     last_page: 1,
   });
   const [position, setPosition] = useState({ top: 0, right: 0 });
+  const [respondingInvitation, setRespondingInvitation] = useState<NotificationRow | null>(null);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -160,7 +163,7 @@ export default function NotificationsMenu() {
     setPage(1);
   };
 
-  const openNotification = async (row: NotificationRow) => {
+  const markRowRead = async (row: NotificationRow) => {
     if (!row.read_at) {
       try {
         const data = await post(`/app-api/notifications/${row.id}/read`, {});
@@ -172,6 +175,15 @@ export default function NotificationsMenu() {
           ),
         );
       } catch {}
+    }
+  };
+
+  const openNotification = async (row: NotificationRow) => {
+    await markRowRead(row);
+    if (row.data?.kind === 'invitation.received' && row.data?.invitation_id) {
+      setOpen(false);
+      setRespondingInvitation(row);
+      return;
     }
 
     setOpen(false);
@@ -194,6 +206,26 @@ export default function NotificationsMenu() {
         })),
       );
     } catch {}
+  };
+
+  const handleInvitationResponded = (
+    status: 'accepted' | 'declined',
+    organizationId?: string,
+    projectId?: string,
+  ) => {
+    setRespondingInvitation(null);
+    load();
+
+    if (status === 'accepted') {
+      toast.success('Invitation accepted. Welcome to the workspace!');
+      if (projectId) {
+        navigate(`/app/projects/${projectId}`);
+      } else if (organizationId) {
+        navigate(`/app/organizations/${organizationId}`);
+      }
+    } else {
+      toast.success('Invitation declined.');
+    }
   };
 
   const panel = open ? (
@@ -242,6 +274,11 @@ export default function NotificationsMenu() {
                   {row.data?.title || 'Okatana notification'}
                 </span>
                 <span className="mt-2 block text-sm text-ink-muted">{row.data?.body || ''}</span>
+                {row.data?.kind === 'invitation.received' && (
+                  <span className="mt-2 block text-xs font-medium text-accent">
+                    Click to review invitation
+                  </span>
+                )}
                 <time className="mt-2 block text-xs text-ink-muted tabular-nums">
                   {new Date(row.created_at).toLocaleString()}
                 </time>
@@ -281,6 +318,23 @@ export default function NotificationsMenu() {
         <span>Notifications</span>
       </button>
       {panel && createPortal(panel, document.body)}
+
+      {respondingInvitation && respondingInvitation.data?.invitation_id && (
+        <InvitationRespondModal
+          invitationId={respondingInvitation.data.invitation_id}
+          organizationName={respondingInvitation.data.invitation_organization ?? ''}
+          projectName={respondingInvitation.data.invitation_project ?? null}
+          role={respondingInvitation.data.invitation_role ?? ''}
+          inviterName={
+            respondingInvitation.data.invitation_inviter ??
+            respondingInvitation.data.actor?.name ??
+            'A team member'
+          }
+          expiresAt={respondingInvitation.data.invitation_expires_at ?? ''}
+          onClose={() => setRespondingInvitation(null)}
+          onResponded={handleInvitationResponded}
+        />
+      )}
     </div>
   );
 }
