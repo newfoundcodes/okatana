@@ -26,6 +26,7 @@ import { useEffect, useState } from 'react';
 import { get, navigate, post } from '../lib/api';
 import AccountSecuritySetup from '../components/AccountSecuritySetup';
 import {
+  ActionLink,
   Alert,
   Button,
   Field,
@@ -216,6 +217,45 @@ export default function InvitePage({ token, onAuthenticated }) {
                 {!invite ? (
                   <div className="mt-8">
                     <LoadingState label="Loading invitation…" />
+                  </div>
+                ) : invite.account_exists ? (
+                  <div className="mt-8 grid gap-6">
+                    <dl className="grid grid-cols-4 gap-6 border-y border-line py-6 md:grid-cols-8">
+                      <div className="col-span-4 md:col-span-4">
+                        <dt className="text-sm text-ink-muted">Organization</dt>
+                        <dd className="mt-2 text-base font-medium text-ink">
+                          {invite.organization.name}
+                        </dd>
+                      </div>
+                      <div className="col-span-2 md:col-span-2">
+                        <dt className="text-sm text-ink-muted">Role</dt>
+                        <dd className="mt-2 text-base font-medium text-ink">{invite.role}</dd>
+                      </div>
+                      {invite.project && (
+                        <div className="col-span-2 md:col-span-2">
+                          <dt className="text-sm text-ink-muted">Project</dt>
+                          <dd className="mt-2 text-base font-medium text-ink">
+                            {invite.project.name}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+
+                    <div className="border-l-2 border-line-strong pl-4">
+                      <p className="text-sm text-ink-muted">
+                        You already have an Okatana account using{' '}
+                        <span className="font-medium text-ink">{invite.email}</span>. Your
+                        invitation is waiting in your notification panel — sign in and click the{' '}
+                        <span className="font-medium text-ink">Notifications</span> bell to accept
+                        or decline.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <ActionLink href="/app" variant="primary">
+                        Open Okatana
+                      </ActionLink>
+                    </div>
                   </div>
                 ) : (
                   <>
