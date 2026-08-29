@@ -38,8 +38,11 @@ class InvitationNotification extends Notification implements ShouldQueue
 {
   use Queueable;
 
-  public function __construct(public Invitation $invitation, public string $plainToken)
-  {
+  public function __construct(
+    public Invitation $invitation,
+    public string $plainToken,
+    public bool $accountExists = false,
+  ) {
     $this->afterCommit();
   }
 
@@ -54,14 +57,25 @@ class InvitationNotification extends Notification implements ShouldQueue
       ? 'project ' . $this->invitation->project->name
       : 'organization ' . $this->invitation->organization->name;
 
+    $inviterName = $this->invitation->inviter?->name ?? 'A team member';
+    $subject = 'You have been invited to join ' . $scope . ' on Okatana';
+
+    if ($this->accountExists) {
+      return (new MailMessage())
+        ->subject($subject)
+        ->greeting('Hello,')
+        ->line($inviterName . ' has invited you to join ' . $scope . ' as ' . $this->invitation->role . '.')
+        ->line('Because you already have an Okatana account, your invitation is waiting in your notification panel. Open Okatana and click the Notifications bell to review and respond.')
+        ->action('Open Okatana', url('/app'))
+        ->line('This invitation expires at ' . $this->invitation->expires_at->toIso8601String() . '.');
+    }
+
     return (new MailMessage())
-      ->subject('Join ' . $scope . ' on Okatana')
+      ->subject($subject)
       ->greeting('You are invited to Okatana')
-      ->line('You were invited to ' . $scope . ' as ' . $this->invitation->role . '.')
-      ->line('The Join page requires a strong password before membership is activated.')
-      ->action('Join', url('/join/' . $this->plainToken))
-      ->line(
-        'This invitation expires at ' . $this->invitation->expires_at->toIso8601String() . '.',
-      );
+      ->line($inviterName . ' has invited you to join ' . $scope . ' as ' . $this->invitation->role . '.')
+      ->line('Use the button below to create your account and set a strong password before entering the workspace.')
+      ->action('Accept invitation', url('/join/' . $this->plainToken))
+      ->line('This invitation expires at ' . $this->invitation->expires_at->toIso8601String() . '.');
   }
 }
