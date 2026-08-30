@@ -325,7 +325,7 @@ class ExternalApiController extends Controller
     }
 
     $creator = User::find($c->created_by);
-    $ticket = DB::transaction(function () use ($project, $board, $data, $creator, $tags) {
+    $ticket = DB::transaction(function () use ($project, $board, $data, $creator, $c, $tags) {
       Project::whereKey($project->id)->lockForUpdate()->first();
 
       $t = Ticket::create([
@@ -339,6 +339,7 @@ class ExternalApiController extends Controller
         'due_at' => $data['due_at'] ?? null,
         'created_by' => $creator?->id,
         'updated_by' => $creator?->id,
+        'api_credential_id' => $c->id,
         'completed_at' => $board->is_done ? now() : null,
         'started_at' => $board->is_done ? null : now(),
       ]);
@@ -555,7 +556,6 @@ class ExternalApiController extends Controller
       if ($changedBoard) {
         TicketComment::create([
           'ticket_id' => $ticket->id,
-          'user_id' => $c->created_by,
           'kind' => 'movement',
           'body_html' => '<p>' . e($from->name) . ' → ' . e($target->name) . '</p>',
           'author_snapshot' => [
@@ -776,6 +776,7 @@ class ExternalApiController extends Controller
       'caption' => $data['caption'] ?? null,
       'content_html' => $content,
       'status' => $status,
+      'api_credential_id' => $c->id,
       'published_at' => $status === 'published' ? now() : null,
     ]);
 
@@ -1057,7 +1058,6 @@ class ExternalApiController extends Controller
     $mentions->validateDocumentHtml($document->organization, $document->project, $body);
     $comment = DocumentComment::create([
       'document_id' => $document->id,
-      'user_id' => $c->created_by,
       'body_html' => $body,
       'author_snapshot' => ['name' => $c->name . ' (API)', 'api_credential_id' => $c->id],
     ]);
@@ -1334,7 +1334,6 @@ class ExternalApiController extends Controller
 
           TicketComment::create([
             'ticket_id' => $ticket->id,
-            'user_id' => $c->created_by,
             'kind' => 'movement',
             'body_html' => '<p>' . e($board->name) . ' → ' . e($target->name) . '</p>',
             'author_snapshot' => [
