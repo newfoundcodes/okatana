@@ -68,10 +68,6 @@ export default function TicketDrawer({
   const [commentAttachmentFiles, setCommentAttachmentFiles] = useState([]);
   const [uploadingAttachments, setUploadingAttachments] = useState(false);
 
-  if (!ticketId) {
-    return null;
-  }
-
   const save = async () => {
     try {
       await patch(`/app-api/tickets/${ticket.id}`, {
@@ -226,6 +222,10 @@ export default function TicketDrawer({
     }
   }, [ticketId]);
 
+  if (!ticketId) {
+    return null;
+  }
+
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex justify-end bg-ink/40"
@@ -248,11 +248,11 @@ export default function TicketDrawer({
             </h2>
             {ticket && (
               <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
-                <Avatar user={ticket.creator || { name: 'Unknown user' }} size="sm" />
+                <Avatar user={ticket.api_credential || ticket.creator || { name: 'Unknown user' }} size="sm" />
                 <span>
                   Created by{' '}
                   <span className="font-medium text-ink">
-                    {ticket.creator?.name || 'Unknown user'}
+                    {ticket.api_credential?.name || ticket.creator?.name || 'Unknown user'}
                   </span>
                 </span>
                 {ticket.edited_at && (
