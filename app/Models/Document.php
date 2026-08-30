@@ -49,6 +49,7 @@ class Document extends Model
     'content_html',
     'status',
     'published_at',
+    'api_credential_id',
     'archived_at',
   ];
 
@@ -73,6 +74,11 @@ class Document extends Model
   public function author(): BelongsTo
   {
     return $this->belongsTo(User::class, 'author_id');
+  }
+
+  public function apiCredential(): BelongsTo
+  {
+    return $this->belongsTo(ApiCredential::class);
   }
 
   public function editors(): BelongsToMany
