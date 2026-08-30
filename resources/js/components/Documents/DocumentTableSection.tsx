@@ -120,13 +120,14 @@ export default function DocumentTableSection({
                       <div className="flex items-center gap-2">
                         <Avatar
                           user={
+                            document.api_credential ||
                             document.author || {
                               name: 'Unknown author',
                             }
                           }
                           size="sm"
                         />
-                        <span>{document.author?.name || 'Unknown author'}</span>
+                        <span>{document.api_credential?.name || document.author?.name || 'Unknown author'}</span>
                       </div>
                     </Td>
                     <Td className="pr-6 tabular-nums">
