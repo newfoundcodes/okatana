@@ -127,6 +127,10 @@ export default function DocumentViewPage({ id }) {
     }
   };
 
+  useEffect(() => {
+    load();
+  }, [id]);
+
   if (failed) {
     return (
       <Page>
@@ -146,10 +150,6 @@ export default function DocumentViewPage({ id }) {
       </Page>
     );
   }
-
-  useEffect(() => {
-    load();
-  }, [id]);
 
   return (
     <Page>
@@ -192,8 +192,8 @@ export default function DocumentViewPage({ id }) {
       <GridLayout className="mb-12">
         <MetaItem label="Author">
           <div className="flex items-center gap-2">
-            <Avatar user={document.author || { name: 'Unknown author' }} size="sm" />
-            <span>{document.author?.name || 'Unknown author'}</span>
+            <Avatar user={document.api_credential || document.author || { name: 'Unknown author' }} size="sm" />
+            <span>{document.api_credential?.name || document.author?.name || 'Unknown author'}</span>
           </div>
         </MetaItem>
         <MetaItem label="Organization">{document.organization?.name || 'Organization'}</MetaItem>
