@@ -57,6 +57,7 @@ class TicketController extends Controller
         'labels:id,name,color',
         'tags:id,name',
         'creator:id,name,email,avatar_path',
+        'apiCredential:id,name',
       ]);
 
     if ($s = trim((string) $request->query('q'))) {
@@ -522,6 +523,7 @@ class TicketController extends Controller
       'labels:id,name,color',
       'tags:id,name',
       'creator:id,name,email,avatar_path',
+      'apiCredential:id,name',
       'attachments.uploader:id,name,email,avatar_path',
       'comments.user:id,name,email,avatar_path',
       'comments.attachments.uploader:id,name,email,avatar_path',
