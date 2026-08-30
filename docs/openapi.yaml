@@ -347,7 +347,7 @@ paths:
                 label_ids: { type: array, items: { type: string } }
       responses:
         '201': { description: Ticket created }
-        '422': { description: Validation, relation, or WIP-limit failure }
+        '422': { description: "Validation, relation, or WIP-limit failure" }
   /projects/{project}/tickets/reorder:
     put:
       summary: Reorder tickets inside a board
