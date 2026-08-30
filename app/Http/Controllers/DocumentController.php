@@ -66,6 +66,7 @@ class DocumentController extends Controller
         'organization:id,name',
         'project:id,organization_id,name,key',
         'author:id,name,email,avatar_path',
+        'apiCredential:id,name',
         'tags:id,name',
       ])
       ->withCount('comments');
@@ -748,6 +749,7 @@ class DocumentController extends Controller
       'organization:id,name',
       'project:id,organization_id,name,key',
       'author:id,name,email,avatar_path',
+      'apiCredential:id,name',
       'editors:id,name,email,avatar_path',
       'tags:id,name',
       'comments' => fn($query) => $query
