@@ -197,7 +197,7 @@ Content-Type: application/json
 
 Scope: `tickets:write`
 
-Select a board using `board_id` or `board_slug`.
+Select a board using `board_id` or `board_slug`. The API credential is recorded as the ticket creator and its name will appear in the UI instead of the user who provisioned it.
 
 ```json
 {
@@ -352,7 +352,7 @@ Scope: `documents:write`
 }
 ```
 
-`project_id` is optional. `status` is `draft` or `published`. Every editor must have access to the selected organization/project scope. `tag_names` accepts up to 20 organization-scoped article tags; tag names are matched case-insensitively and reused across documents in the same organization.
+`project_id` is optional. `status` is `draft` or `published`. Every editor must have access to the selected organization/project scope. `tag_names` accepts up to 20 organization-scoped article tags; tag names are matched case-insensitively and reused across documents in the same organization. The API credential is recorded as the document author and its name will appear in the UI instead of the user who provisioned it.
 
 ### Read document
 
