@@ -54,6 +54,7 @@ class Ticket extends Model
     'edited_at',
     'created_by',
     'updated_by',
+    'api_credential_id',
     'archived_at',
   ];
 
@@ -81,6 +82,11 @@ class Ticket extends Model
   public function creator(): BelongsTo
   {
     return $this->belongsTo(User::class, 'created_by');
+  }
+
+  public function apiCredential(): BelongsTo
+  {
+    return $this->belongsTo(ApiCredential::class);
   }
 
   public function assignees(): BelongsToMany
