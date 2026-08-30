@@ -47,10 +47,10 @@ export default function TicketCard({ ticket, projectKey, onOpen, onDragStart }: 
       </div>
       <h3 className="mt-2 text-base font-semibold leading-normal text-ink">{ticket.title}</h3>
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
-        <Avatar user={ticket.creator || { name: 'Unknown user' }} size="sm" />
-        <span>
+        <Avatar user={ticket.api_credential || ticket.creator || { name: 'Unknown user' }} size="sm" />
+        <span className="truncate">
           Created by{' '}
-          <span className="font-medium text-ink">{ticket.creator?.name || 'Unknown user'}</span>
+          <span className="font-medium text-ink">{ticket.api_credential?.name || ticket.creator?.name || 'Unknown user'}</span>
         </span>
       </div>
       {ticket.labels.length > 0 && (
