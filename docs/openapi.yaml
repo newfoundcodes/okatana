@@ -55,6 +55,7 @@ components:
         due_at: { type: [string, 'null'], format: date-time }
         started_at: { type: [string, 'null'], format: date-time }
         completed_at: { type: [string, 'null'], format: date-time }
+        api_credential_id: { type: [string, 'null'] }
         archived_at: { type: [string, 'null'], format: date-time }
     Document:
       type: object
@@ -67,6 +68,7 @@ components:
         caption: { type: [string, 'null'] }
         content_html: { type: [string, 'null'] }
         status: { type: string, enum: [draft, published] }
+        api_credential_id: { type: [string, 'null'] }
         published_at: { type: [string, 'null'], format: date-time }
         archived_at: { type: [string, 'null'], format: date-time }
         tags:
@@ -319,7 +321,7 @@ paths:
         '200': { description: Paginated ticket list }
     post:
       summary: Create ticket
-      description: Requires tickets:write. Choose board_id or board_slug.
+      description: Requires tickets:write. Choose board_id or board_slug. The API credential is recorded as the ticket creator and its name will appear in the UI instead of the user who provisioned it.
       parameters:
         - in: path
           name: project
@@ -497,7 +499,7 @@ paths:
     post:
       tags: [Documents]
       summary: Create document
-      description: Requires documents:write. The API credential is used as the author when it has a creator user.
+      description: Requires documents:write. The API credential is recorded as the document author and its name will appear in the UI instead of the user who provisioned it.
       parameters:
         - in: path
           name: organization
