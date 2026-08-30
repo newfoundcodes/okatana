@@ -41,6 +41,11 @@ class Organization extends Model
 
   protected $fillable = ['name', 'slug', 'description', 'settings'];
 
+  public function resolveRouteBinding($value, $field = null)
+  {
+      return $this->where('id', $value)->orWhere('slug', $value)->firstOrFail();
+  }
+
   protected function casts(): array
   {
     return ['settings' => 'array'];
