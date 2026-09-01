@@ -103,6 +103,7 @@ nav:
       - HTTP API guide: integrations/http-api.md
       - Endpoint reference: API.md
       - Webhooks: integrations/webhooks.md
+      - Official SDKs: integrations/sdks.md
   - Developers:
       - Architecture: ARCHITECTURE.md
       - Laravel backend: developer/backend.md
