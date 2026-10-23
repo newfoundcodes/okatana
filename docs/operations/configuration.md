@@ -2,6 +2,14 @@
 
 Okatana uses Laravel environment configuration. Begin with `.env.example`, keep environment files out of version control, and apply changes to both web and queue processes.
 
+`.env.example` is a template and is not read by Laravel. Set `OKATANA_REQUIRE_TWO_FACTOR=false` in the active `.env` file or in the process/container environment:
+
+```dotenv
+OKATANA_REQUIRE_TWO_FACTOR=false
+```
+
+After changing it, restart the web process. Confirm the effective setting through `/app-api/auth/config`; its `two_factor_required` field must be `false`.
+
 The complete lookup table is in [Environment variables](../reference/environment.md). This page explains the decisions behind the main groups.
 
 ## Application identity and runtime
